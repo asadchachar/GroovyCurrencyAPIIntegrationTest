@@ -1,0 +1,3 @@
+rootProject.name = 'integration-tests'
+include 'common'
+include 'fixer-integration-tests'

@@ -9,6 +9,7 @@ import java.time.*;
 import java.time.temporal.ChronoUnit;
 
 import static org.apache.http.HttpStatus.SC_OK as OK;
+import static org.apache.http.HttpStatus.SC_UNAUTHORIZED as Unauthorized;
 import spock.lang.Unroll;
 import config.Config;
 import groovyx.net.http.URIBuilder
@@ -76,6 +77,39 @@ class FixerTest extends BaseSpecification {
 		from | to | amount | expectedStatus
 		"SEK" | "USD" | 217.1 | OK
 		"INR" | "PKR" | 3000 | OK
+	
+	}
+
+	@Unroll
+	def "Currency Conversion between #from and #to on amount #amount without API key "() {
+		when:
+		client.headers['api-key'] = "INVALID_API_KEY"
+
+		def request = """
+		{
+			"from": "$from",
+			"to": "$to",
+			"amount": "$amount"
+		}
+		"""
+		
+		def resp = client.post(
+			path: baseUrl + "/currency", 
+			requestContentType: JSON, 
+			contentType: JSON, 
+			body: request ) as HttpResponseDecorator
+		println "Request " + request;
+		println "Response" + resp.data;
+		println "Response" + resp.status;
+
+		then:
+		assert resp.data.success == null
+		assert resp.status.toString() == "$expectedStatus"
+	
+		where:
+		from | to | amount | expectedStatus
+		"SEK" | "USD" | 217.1 | Unauthorized
+		"INR" | "PKR" | 3000 | Unauthorized
 	
 	}
 
